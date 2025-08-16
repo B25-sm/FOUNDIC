@@ -1,205 +1,365 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../../src/firebase';
-import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import app from '../../src/firebase';
+import { auth, db } from '../../src/firebase';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import AuthGuard from '../components/AuthGuard';
 import OnboardingModal from '../components/OnboardingModal';
-import { useRouter } from 'next/navigation';
 import ValuationEstimator from '../components/ValuationEstimator';
 import Leaderboard from '../components/Leaderboard';
 
-const db = getFirestore(app);
-
-type UserWithSurvey = {
-  id: string;
-  displayName?: string;
-  email?: string;
-  survey?: Record<string, string>;
-  compatibility?: number;
-};
-
-function useUserRole(uid: string | undefined) {
-  const [role, setRole] = React.useState<string | null>(null);
-  useEffect(() => {
-    if (!uid) return;
-    getDoc(doc(db, 'users', uid)).then(snap => {
-      setRole(snap.data()?.role || 'founder');
-    });
-  }, [uid]);
-  return role;
+interface UserStats {
+  fCoins: number;
+  dnaMatches: number;
+  podsJoined: number;
+  postsCreated: number;
+  followers: number;
+  following: number;
+  likesReceived: number;
+  commentsReceived: number;
+  opportunitiesPosted: number;
+  opportunitiesApplied: number;
 }
 
 export default function DashboardPage() {
   const [user] = useAuthState(auth);
-  const role = useUserRole(user?.uid);
-  const [fcoin, setFcoin] = useState(0);
-  const [podInvites, setPodInvites] = useState<any[]>([]);
-  const [recentMatches, setRecentMatches] = useState<UserWithSurvey[]>([]);
-  const [analytics, setAnalytics] = useState({ users: 0, posts: 0, pods: 0 });
+  const [userData, setUserData] = useState<any>(null);
+  const [userStats, setUserStats] = useState<UserStats>({
+    fCoins: 0,
+    dnaMatches: 0,
+    podsJoined: 0,
+    postsCreated: 0,
+    followers: 0,
+    following: 0,
+    likesReceived: 0,
+    commentsReceived: 0,
+    opportunitiesPosted: 0,
+    opportunitiesApplied: 0
+  });
+  const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const router = useRouter();
+  const [showValuation, setShowValuation] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    // F-Coin stats (placeholder: count posts as F-Coins)
-    getDocs(query(collection(db, 'posts'), where('authorId', '==', user.uid))).then(snap => {
-      setFcoin(snap.size * 10); // 10 F-Coins per post (example)
-    });
-    // Pod invites (pods where user is not a member but is invited - placeholder: none)
-    setPodInvites([]); // You can implement invites in pods collection if needed
-    // Recent matches (from DNA Match)
-    getDoc(doc(db, 'users', user.uid)).then(snap => {
-      const mySurvey = snap.data()?.survey;
-      if (!mySurvey) return setRecentMatches([]);
-      getDocs(query(collection(db, 'users'), where('survey', '!=', null))).then(qSnap => {
-        const others = qSnap.docs.filter(d => d.id !== user.uid).map(d => ({ id: d.id, ...d.data() } as UserWithSurvey));
-        const scored = others.map(u => ({
-          ...u,
-          compatibility: calcCompatibility(mySurvey, u.survey || {}),
-        })).sort((a, b) => b.compatibility - a.compatibility);
-        setRecentMatches(scored.slice(0, 3));
-      });
-    });
-    // Analytics
-    (async () => {
-      const userSnap = await getDocs(collection(db, 'users'));
-      const postSnap = await getDocs(collection(db, 'posts'));
-      const podsSnap = await getDocs(collection(db, 'pods'));
-      setAnalytics({
-        users: userSnap.size,
-        posts: postSnap.size,
-        pods: podsSnap.size,
-      });
-    })();
-    // Onboarding: show if no survey and not dismissed
-    getDoc(doc(db, 'users', user.uid)).then(snap => {
-      const hasSurvey = !!snap.data()?.survey;
-      if (!hasSurvey && !localStorage.getItem('foundic_onboarding_dismissed')) {
-        setShowOnboarding(true);
-      }
-    });
+    if (user) {
+      loadUserData();
+    }
   }, [user]);
 
-  function calcCompatibility(a: any, b: any) {
-    let score = 0;
-    const keys = ['workStyle', 'riskTolerance', 'vision', 'commitment', 'values'];
-    keys.forEach(k => {
-      if (a[k] && b[k] && a[k] === b[k]) score++;
-    });
-    return Math.round((score / keys.length) * 100);
+  const loadUserData = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setUserData(data);
+        
+        // Load user statistics
+        await loadUserStats(user.uid);
+        
+        // Show onboarding for new users
+        if (!data.onboardingCompleted) {
+          setShowOnboarding(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUserStats = async (userId: string) => {
+    try {
+      // Get posts count
+      const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId));
+      const postsSnapshot = await getDocs(postsQuery);
+      const postsCount = postsSnapshot.size;
+
+      // Get DNA matches count
+      const matchesQuery = query(collection(db, 'dnaMatches'), where('userId', '==', userId));
+      const matchesSnapshot = await getDocs(matchesQuery);
+      const matchesCount = matchesSnapshot.size;
+
+      // Get pods joined count
+      const podsQuery = query(collection(db, 'pods'), where('members', 'array-contains', userId));
+      const podsSnapshot = await getDocs(podsQuery);
+      const podsCount = podsSnapshot.size;
+
+          // Get opportunities posted count
+    const opportunitiesQuery = query(collection(db, 'opportunities'), where('authorId', '==', userId));
+    const opportunitiesSnapshot = await getDocs(opportunitiesQuery);
+    const opportunitiesPosted = opportunitiesSnapshot.size;
+
+    // Get user's applied opportunities count
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    const userAppliedOpportunities = userDoc.data()?.appliedOpportunities?.length || 0;
+
+      setUserStats({
+        fCoins: userData?.fCoins || 0,
+        dnaMatches: matchesCount,
+        podsJoined: podsCount,
+        postsCreated: postsCount,
+        followers: userData?.followers?.length || 0,
+        following: userData?.following?.length || 0,
+        likesReceived: userData?.totalLikesReceived || 0,
+        commentsReceived: userData?.totalCommentsReceived || 0,
+              opportunitiesPosted: opportunitiesPosted,
+      opportunitiesApplied: userAppliedOpportunities
+      });
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <AuthGuard>
+        <main className="min-h-screen bg-midnight-950 text-support px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-950 mx-auto mb-4"></div>
+              <p className="text-support/60">Loading dashboard...</p>
+            </div>
+          </div>
+        </main>
+      </AuthGuard>
+    );
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-midnight-950 text-support px-4 py-12">
-      <OnboardingModal
-        open={showOnboarding}
-        onClose={() => {
-          setShowOnboarding(false);
-          localStorage.setItem('foundic_onboarding_dismissed', '1');
-        }}
-        onDnaSurvey={() => {
-          setShowOnboarding(false);
-          localStorage.setItem('foundic_onboarding_dismissed', '1');
-          router.push('/dna-match');
-        }}
-      />
-      <div className="card p-8 max-w-2xl w-full text-center animate-fade-in-up">
-        <div className="flex flex-col items-center gap-2 mb-6">
-          {user?.photoURL && (
-            <img src={user.photoURL} alt="avatar" className="w-16 h-16 rounded-full border border-gold-950 shadow-glow mb-2" />
-          )}
-          <h1 className="text-2xl font-bold gradient-text">Welcome, {user?.displayName || user?.email}!</h1>
-          <span className="badge badge-info mt-1">Role: {role ? role.charAt(0).toUpperCase() + role.slice(1) : '...'}</span>
-        </div>
-        {/* Analytics widgets */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="card p-4 text-center">
-            <div className="text-lg font-bold gradient-text">{analytics.users}</div>
-            <div className="text-support/70 text-xs">Users</div>
+    <AuthGuard>
+      <main className="min-h-screen bg-midnight-950 text-support px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold gradient-text mb-2">Founder Compass</h1>
+            <p className="text-support/60 text-sm sm:text-base">Track your startup journey and connect with the community</p>
           </div>
-          <div className="card p-4 text-center">
-            <div className="text-lg font-bold gradient-text">{analytics.posts}</div>
-            <div className="text-support/70 text-xs">Posts</div>
-          </div>
-          <div className="card p-4 text-center">
-            <div className="text-lg font-bold gradient-text">{analytics.pods}</div>
-            <div className="text-support/70 text-xs">Pods</div>
-          </div>
-        </div>
-        <ValuationEstimator />
-        <Leaderboard />
-        {/* F-Coin stats and pod invites */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="feature-card">
-            <span className="text-gold-950 text-2xl font-bold">🪙</span>
-            <h3 className="mt-2 text-lg font-semibold text-support">F-Coin Balance</h3>
-            <p className="mt-1 text-support/80 text-sm">Earn F-Coins for every post, pod, and milestone. (10 F-Coins per post)</p>
-            <div className="text-2xl font-bold gradient-text mt-2">{fcoin}</div>
-          </div>
-          <div className="feature-card">
-            <span className="text-gold-950 text-2xl font-bold">📩</span>
-            <h3 className="mt-2 text-lg font-semibold text-support">Pod Invites</h3>
-            <p className="mt-1 text-support/80 text-sm">See pods you’ve been invited to join. (Coming soon)</p>
-            <div className="mt-2 text-support/60 text-sm">{podInvites.length === 0 ? 'No invites yet.' : podInvites.map((p: any) => <div key={p.id}>{p.title}</div>)}</div>
-          </div>
-        </div>
-        {/* Recent matches */}
-        <div className="card p-6 mb-8 animate-fade-in-up">
-          <h2 className="text-lg font-bold mb-4">Recent DNA Matches</h2>
-          {recentMatches.length === 0 ? (
-            <div className="text-support/60 text-center">No matches yet. Complete your DNA survey!</div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {recentMatches.map((m: UserWithSurvey) => (
-                <div key={m.id} className="bg-midnight-800/60 rounded-lg px-4 py-3 flex items-center gap-4">
-                  <span className="font-semibold text-support/90 flex-1">{m.displayName || m.email}</span>
-                  <span className="badge badge-info">{m.compatibility}% match</span>
-                  <button className="btn-secondary text-xs">Message</button>
+
+          {/* User Info Card */}
+          <div className="card p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gold-950 rounded-full flex items-center justify-center text-midnight-950 font-bold text-xl sm:text-2xl">
+                {user?.displayName?.[0] || user?.email?.[0] || 'U'}
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl sm:text-2xl font-semibold text-support mb-1">
+                  {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                </h2>
+                <p className="text-support/60 text-sm sm:text-base capitalize mb-2">
+                  {userData?.role || 'Member'} • Member since {user?.metadata?.creationTime ? 
+                    new Date(user.metadata.creationTime).toLocaleDateString() : 'Recently'}
+                </p>
+                <div className="flex flex-wrap gap-2 sm:gap-4 text-sm">
+                  <span className="bg-gold-950/20 text-gold-950 px-2 sm:px-3 py-1 rounded-full font-medium">
+                    {userStats.fCoins} F-Coins
+                  </span>
+                  <span className="bg-midnight-800 text-support px-2 sm:px-3 py-1 rounded-full">
+                    {userStats.followers} Followers
+                  </span>
+                  <span className="bg-midnight-800 text-support px-2 sm:px-3 py-1 rounded-full">
+                    {userStats.following} Following
+                  </span>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="card p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-gold-950 mb-1">{userStats.fCoins}</div>
+              <div className="text-xs sm:text-sm text-support/60">F-Coins</div>
+            </div>
+            <div className="card p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-support mb-1">{userStats.dnaMatches}</div>
+              <div className="text-xs sm:text-sm text-support/60">DNA Matches</div>
+            </div>
+            <div className="card p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-support mb-1">{userStats.podsJoined}</div>
+              <div className="text-xs sm:text-sm text-support/60">Pods Joined</div>
+            </div>
+            <div className="card p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-support mb-1">{userStats.postsCreated}</div>
+              <div className="text-xs sm:text-sm text-support/60">Posts</div>
+            </div>
+            <div className="card p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-support mb-1">{userStats.likesReceived}</div>
+              <div className="text-xs sm:text-sm text-support/60">Likes Received</div>
+            </div>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {/* DNA Match */}
+            <div className="card p-4 sm:p-6 hover:card-hover transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="text-3xl">🧬</div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-support">DNA Match</h3>
+                  <p className="text-sm text-support/60">Find your perfect co-founder</p>
+                </div>
+              </div>
+              <p className="text-sm text-support/80 mb-4">
+                Take our comprehensive survey to find co-founders with complementary skills and shared vision.
+              </p>
+              <a href="/dna-match" className="btn-primary w-full text-center text-sm">
+                Start Matching
+              </a>
+            </div>
+
+            {/* Mission Pods */}
+            <div className="card p-4 sm:p-6 hover:card-hover transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="text-3xl">🚀</div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-support">Mission Pods</h3>
+                  <p className="text-sm text-support/60">60-day co-building sprints</p>
+                </div>
+              </div>
+              <p className="text-sm text-support/80 mb-4">
+                Join focused teams for 60-day sprints to build, validate, and launch your startup ideas.
+              </p>
+              <a href="/pods" className="btn-primary w-full text-center text-sm">
+                Join Pods
+              </a>
+            </div>
+
+            {/* Fail Forward Wall */}
+            <div className="card p-4 sm:p-6 hover:card-hover transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="text-3xl">💪</div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-support">Fail Forward</h3>
+                  <p className="text-sm text-support/60">Share lessons learned</p>
+                </div>
+              </div>
+              <p className="text-sm text-support/80 mb-4">
+                Share your failures and lessons learned. Help others avoid the same mistakes.
+              </p>
+              <a href="/wall" className="btn-primary w-full text-center text-sm">
+                Share Story
+              </a>
+            </div>
+
+            {/* Signal Boost */}
+            <div className="card p-4 sm:p-6 hover:card-hover transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="text-3xl">📢</div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-support">Signal Boost</h3>
+                  <p className="text-sm text-support/60">Share micro wins</p>
+                </div>
+              </div>
+              <p className="text-sm text-support/80 mb-4">
+                Celebrate small victories and milestones. Every step forward counts.
+              </p>
+              <a href="/wall" className="btn-primary w-full text-center text-sm">
+                Boost Signal
+              </a>
+            </div>
+
+            {/* Investor Connect */}
+            <div className="card p-4 sm:p-6 hover:card-hover transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="text-3xl">💰</div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-support">Investor Connect</h3>
+                  <p className="text-sm text-support/60">Connect with investors</p>
+                </div>
+              </div>
+              <p className="text-sm text-support/80 mb-4">
+                Get discovered by investors looking for promising startups to back.
+              </p>
+              <a href="/investors" className="btn-primary w-full text-center text-sm">
+                Get Discovered
+              </a>
+            </div>
+
+            {/* Opportunities Board */}
+            <div className="card p-4 sm:p-6 hover:card-hover transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="text-3xl">💼</div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-support">Opportunities Board</h3>
+                  <p className="text-sm text-support/60">Find opportunities</p>
+                </div>
+              </div>
+              <p className="text-sm text-support/80 mb-4">
+                Post opportunities or find them. Connect freelancers with hirers.
+              </p>
+              <a href="/opportunities" className="btn-primary w-full text-center text-sm">
+                Browse Opportunities
+              </a>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <button
+              onClick={() => setShowValuation(true)}
+              className="card p-4 sm:p-6 hover:card-hover transition-all duration-300 text-left"
+            >
+              <div className="text-2xl mb-2">📊</div>
+              <h3 className="font-semibold text-support mb-1">Valuation Estimator</h3>
+              <p className="text-sm text-support/60">Estimate your startup's value</p>
+            </button>
+
+            <button
+              onClick={() => setShowLeaderboard(true)}
+              className="card p-4 sm:p-6 hover:card-hover transition-all duration-300 text-left"
+            >
+              <div className="text-2xl mb-2">🏆</div>
+              <h3 className="font-semibold text-support mb-1">Leaderboard</h3>
+              <p className="text-sm text-support/60">Top founders by F-Coins</p>
+            </button>
+
+            <a
+              href="/profile"
+              className="card p-4 sm:p-6 hover:card-hover transition-all duration-300 text-left"
+            >
+              <div className="text-2xl mb-2">👤</div>
+              <h3 className="font-semibold text-support mb-1">View Profile</h3>
+              <p className="text-sm text-support/60">Check your public profile</p>
+            </a>
+
+            <a
+              href="/settings"
+              className="card p-4 sm:p-6 hover:card-hover transition-all duration-300 text-left"
+            >
+              <div className="text-2xl mb-2">⚙️</div>
+              <h3 className="font-semibold text-support mb-1">Settings</h3>
+              <p className="text-sm text-support/60">Manage your preferences</p>
+            </a>
+          </div>
         </div>
-        {/* Quick links to features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <div className="feature-card">
-            <span className="text-gold-950 text-2xl font-bold">🚀</span>
-            <h3 className="mt-2 text-lg font-semibold text-support">Mission Pods</h3>
-            <p className="mt-1 text-support/80 text-sm">Join or create a pod, track milestones, and collaborate in real time.</p>
-            <a href="/pods" className="btn-primary mt-4">Go to Pods</a>
-          </div>
-          <div className="feature-card">
-            <span className="text-gold-950 text-2xl font-bold">🧬</span>
-            <h3 className="mt-2 text-lg font-semibold text-support">DNA Match</h3>
-            <p className="mt-1 text-support/80 text-sm">Find your perfect co-founder match and start building together.</p>
-            <a href="/dna-match" className="btn-secondary mt-4">Find a Match</a>
-          </div>
-          <div className="feature-card">
-            <span className="text-gold-950 text-2xl font-bold">💡</span>
-            <h3 className="mt-2 text-lg font-semibold text-support">Wall</h3>
-            <p className="mt-1 text-support/80 text-sm">Share wins, lessons, and connect with the community.</p>
-            <a href="/wall" className="btn-primary mt-4">Go to Wall</a>
-          </div>
-          {role === 'investor' && (
-            <div className="feature-card">
-              <span className="text-gold-950 text-2xl font-bold">💰</span>
-              <h3 className="mt-2 text-lg font-semibold text-support">Investor Connect</h3>
-              <p className="mt-1 text-support/80 text-sm">Browse founders, view traction, and connect with startups.</p>
-              <a href="/investors" className="btn-secondary mt-4">Find Founders</a>
-            </div>
-          )}
-          {role === 'admin' && (
-            <div className="feature-card">
-              <span className="text-gold-950 text-2xl font-bold">🛡️</span>
-              <h3 className="mt-2 text-lg font-semibold text-support">Admin Panel</h3>
-              <p className="mt-1 text-support/80 text-sm">Moderate posts, approve startups, and manage verification.</p>
-              <a href="/admin" className="btn-primary mt-4">Go to Admin</a>
-            </div>
-          )}
-        </div>
-      </div>
-    </main>
+
+        {/* Modals */}
+        {showOnboarding && (
+          <OnboardingModal 
+            open={showOnboarding}
+            onClose={() => setShowOnboarding(false)}
+            onDnaSurvey={() => {
+              setShowOnboarding(false);
+              window.location.href = '/dna-match';
+            }}
+          />
+        )}
+        
+        {showValuation && (
+          <ValuationEstimator />
+        )}
+        
+        {showLeaderboard && (
+          <Leaderboard />
+        )}
+      </main>
+    </AuthGuard>
   );
 } 

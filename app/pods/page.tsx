@@ -5,6 +5,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../src/firebase';
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, Timestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import app from '../../src/firebase';
+import AuthGuard from '../components/AuthGuard';
 
 const db = getFirestore(app);
 
@@ -61,64 +62,68 @@ export default function PodsPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center bg-midnight-950 text-support px-2 py-8">
-      <div className="max-w-2xl w-full">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold gradient-text">Mission Pods</h1>
-          <button className="btn-primary" onClick={() => setShowForm(v => !v)}>{showForm ? 'Cancel' : 'Create Pod'}</button>
-        </div>
-        {showForm && (
-          <form className="card p-6 mb-8 flex flex-col gap-3 animate-fade-in-up" onSubmit={handleCreate}>
-            <input
-              className="input-field"
-              type="text"
-              placeholder="Pod title"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              required
-            />
-            <input
-              className="input-field"
-              type="text"
-              placeholder="Main goal for this sprint"
-              value={goal}
-              onChange={e => setGoal(e.target.value)}
-              required
-            />
-            <select
-              className="input-field"
-              value={comp}
-              onChange={e => setComp(e.target.value)}
-              required
-            >
-              {COMP_TYPES.map(c => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-            <button className="btn-secondary mt-2" type="submit" disabled={creating}>{creating ? 'Creating...' : 'Create Pod'}</button>
-          </form>
-        )}
-        <div className="flex flex-col gap-6">
-          {loading ? (
-            <div className="text-support/60 text-center">Loading pods...</div>
-          ) : pods.length === 0 ? (
-            <div className="text-support/60 text-center">No pods yet. Create the first one!</div>
-          ) : pods.map(pod => (
-            <div key={pod.id} className="card p-6 animate-fade-in-up">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="font-semibold text-support text-lg">{pod.title}</span>
-                <span className="badge badge-info ml-2">{COMP_TYPES.find(c => c.value === pod.comp)?.label}</span>
-                <span className="ml-auto text-xs text-support/60">{pod.createdAt?.toDate ? pod.createdAt.toDate().toLocaleString() : 'now'}</span>
+    <AuthGuard>
+      <main className="min-h-screen flex flex-col items-center bg-midnight-950 text-support px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="w-full max-w-2xl lg:max-w-4xl">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text">Mission Pods</h1>
+            <button className="btn-primary text-sm sm:text-base" onClick={() => setShowForm(v => !v)}>{showForm ? 'Cancel' : 'Create Pod'}</button>
+          </div>
+          {showForm && (
+            <form className="card p-4 sm:p-6 mb-6 sm:mb-8 flex flex-col gap-3 animate-fade-in-up" onSubmit={handleCreate}>
+              <input
+                className="input-field text-sm sm:text-base"
+                type="text"
+                placeholder="Pod title"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                required
+              />
+              <input
+                className="input-field text-sm sm:text-base"
+                type="text"
+                placeholder="Main goal for this sprint"
+                value={goal}
+                onChange={e => setGoal(e.target.value)}
+                required
+              />
+              <select
+                className="input-field text-sm sm:text-base"
+                value={comp}
+                onChange={e => setComp(e.target.value)}
+                required
+              >
+                {COMP_TYPES.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              <button className="btn-secondary mt-2 text-sm sm:text-base" type="submit" disabled={creating}>{creating ? 'Creating...' : 'Create Pod'}</button>
+            </form>
+          )}
+          <div className="flex flex-col gap-4 sm:gap-6">
+            {loading ? (
+              <div className="text-support/60 text-center text-sm sm:text-base">Loading pods...</div>
+            ) : pods.length === 0 ? (
+              <div className="text-support/60 text-center text-sm sm:text-base">No pods yet. Create the first one!</div>
+            ) : pods.map(pod => (
+              <div key={pod.id} className="card p-4 sm:p-6 animate-fade-in-up">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="font-semibold text-support text-base sm:text-lg">{pod.title}</span>
+                    <span className="badge badge-info text-xs sm:text-sm">{COMP_TYPES.find(c => c.value === pod.comp)?.label}</span>
+                  </div>
+                  <span className="text-xs text-support/60 sm:ml-auto">{pod.createdAt?.toDate ? pod.createdAt.toDate().toLocaleString() : 'now'}</span>
+                </div>
+                <div className="text-support/80 mb-3 sm:mb-2 text-left text-sm sm:text-base">Goal: {pod.goal}</div>
+                <div className="flex flex-col sm:flex-row sm:gap-4 sm:items-center text-support/70 text-sm">
+                  <span>Members: {pod.members?.length || 1}</span>
+                  <button className="btn-secondary text-xs sm:text-sm mt-2 sm:mt-0" onClick={() => handleJoin(pod.id, pod.members || [])} disabled={pod.members?.includes(user?.uid)}>Join Pod</button>
+                </div>
               </div>
-              <div className="text-support/80 mb-2 text-left">Goal: {pod.goal}</div>
-              <div className="flex gap-4 items-center text-support/70 text-sm">
-                <span>Members: {pod.members?.length || 1}</span>
-                <button className="btn-secondary text-xs" onClick={() => handleJoin(pod.id, pod.members || [])} disabled={pod.members?.includes(user?.uid)}>Join Pod</button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </AuthGuard>
   );
 } 

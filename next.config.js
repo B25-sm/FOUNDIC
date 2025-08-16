@@ -1,52 +1,32 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
-  images: {
-    domains: ['localhost', 'res.cloudinary.com', 'lh3.googleusercontent.com'],
-    formats: ['image/webp', 'image/avif'],
-  },
+  transpilePackages: ['undici'],
   env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
+    CUSTOM_KEY: process.env.CUSTOM_KEY || ""
   },
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-        ],
-      },
-    ];
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/:path*`,
-      },
-    ];
-  },
+  // Remove or only include if needed
+  // experimental: {
+  //   appDir: true
+  // },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve = config.resolve || {};
       config.resolve.alias = config.resolve.alias || {};
       config.resolve.alias['undici'] = false;
     }
+    
     return config;
   },
+  // Suppress hydration warnings for browser extension attributes
+  onDemandEntries: {
+    // period (in ms) where the server will keep pages in the buffer
+    maxInactiveAge: 25 * 1000,
+    // number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 2,
+  },
+  // Suppress specific hydration warnings
+  reactStrictMode: true,
+  swcMinify: true,
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;

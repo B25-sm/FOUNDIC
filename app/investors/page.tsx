@@ -5,6 +5,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../src/firebase';
 import { getFirestore, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import app from '../../src/firebase';
+import AuthGuard from '../components/AuthGuard';
 
 const db = getFirestore(app);
 
@@ -39,24 +40,28 @@ export default function InvestorsPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center bg-midnight-950 text-support px-2 py-8">
-      <div className="max-w-2xl w-full">
-        <h1 className="text-2xl font-bold gradient-text mb-6">Investor Connect</h1>
-        <p className="mb-6 text-support/80">Browse and connect with top founders, ranked by traction and activity.</p>
-        <div className="flex flex-col gap-6">
-          {loading ? (
-            <div className="text-support/60 text-center">Loading founders...</div>
-          ) : founders.length === 0 ? (
-            <div className="text-support/60 text-center">No founders found yet.</div>
-          ) : founders.map(f => (
-            <div key={f.id} className="card p-6 flex items-center gap-4 animate-fade-in-up">
-              <span className="font-semibold text-support/90 flex-1">{f.displayName || f.email}</span>
-              <span className="badge badge-info">{f.survey ? 'Active' : 'New'}</span>
-              <button className="btn-primary text-xs" onClick={() => handleInterest(f.id)}>Express Interest</button>
-            </div>
-          ))}
+    <AuthGuard>
+      <main className="min-h-screen flex flex-col items-center bg-midnight-950 text-support px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="w-full max-w-2xl lg:max-w-4xl">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold gradient-text mb-4 sm:mb-6">Investor Connect</h1>
+          <p className="mb-6 text-sm sm:text-base text-support/80">Browse and connect with top founders, ranked by traction and activity.</p>
+          <div className="flex flex-col gap-4 sm:gap-6">
+            {loading ? (
+              <div className="text-support/60 text-center text-sm sm:text-base">Loading founders...</div>
+            ) : founders.length === 0 ? (
+              <div className="text-support/60 text-center text-sm sm:text-base">No founders found yet.</div>
+            ) : founders.map(f => (
+              <div key={f.id} className="card p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 animate-fade-in-up">
+                <span className="font-semibold text-support/90 flex-1 text-sm sm:text-base">{f.displayName || f.email}</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="badge badge-info text-xs sm:text-sm">{f.survey ? 'Active' : 'New'}</span>
+                  <button className="btn-primary text-xs sm:text-sm" onClick={() => handleInterest(f.id)}>Express Interest</button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </AuthGuard>
   );
 } 
