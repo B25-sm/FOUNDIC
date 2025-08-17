@@ -44,3 +44,10 @@ yarn.lock
 pnpm-lock.yaml
 
 .vercel
+
+# Next.js build output
+.next/
+# Env files
+.env*
+# Vercel local
+.vercel/
