@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Foundic Network',
-  description: 'The Cleanest Space for Startup Founders',
+  description: 'The Cleanest Space for Startup Founders - Updated',
   openGraph: {
     title: 'Foundic Network',
     description: 'The Cleanest Space for Startup Founders',
