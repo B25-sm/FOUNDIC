@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { storage } from '../../src/firebase';
 import { ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 
@@ -35,6 +35,16 @@ export default function ImageUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const uploadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timers on component unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      if (uploadTimeoutRef.current) clearTimeout(uploadTimeoutRef.current);
+    };
+  }, []);
 
   // Calculate initial crop area for 4:5 aspect ratio
   const calculateInitialCrop = useCallback((imageWidth: number, imageHeight: number): CropArea => {
@@ -143,10 +153,6 @@ export default function ImageUpload({
   const handleCropConfirm = async () => {
     if (!selectedFile || !imageRef.current) return;
 
-    // Declare variables in function scope to be accessible in catch block
-    let progressInterval: NodeJS.Timeout | null = null;
-    let uploadTimeout: NodeJS.Timeout | null = null;
-
     try {
       setIsUploading(true);
       onUploadStart();
@@ -159,7 +165,7 @@ export default function ImageUpload({
       let currentProgress = 10;
       
       const simulateProgress = () => {
-        progressInterval = setInterval(() => {
+        progressIntervalRef.current = setInterval(() => {
           currentProgress += Math.random() * 8;
           if (currentProgress > 85) currentProgress = 85;
           setUploadProgress(currentProgress);
@@ -167,9 +173,12 @@ export default function ImageUpload({
       };
 
       // Set upload timeout (30 seconds)
-      uploadTimeout = setTimeout(() => {
+      uploadTimeoutRef.current = setTimeout(() => {
         console.error('Upload timeout after 30 seconds');
-        clearInterval(progressInterval);
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
         throw new Error('Upload timeout - please try again with a smaller image');
       }, 30000);
 
@@ -205,8 +214,14 @@ export default function ImageUpload({
         console.log('Direct upload successful! Download URL:', downloadURL);
         
         setUploadProgress(100);
-        if (progressInterval) clearInterval(progressInterval);
-        if (uploadTimeout) clearTimeout(uploadTimeout);
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
+        if (uploadTimeoutRef.current) {
+          clearTimeout(uploadTimeoutRef.current);
+          uploadTimeoutRef.current = null;
+        }
         
         // Small delay for user to see 100%
         setTimeout(() => {
@@ -224,8 +239,14 @@ export default function ImageUpload({
         
         if (isCorsError) {
           console.error('CORS error detected. Please configure Firebase Storage CORS settings.');
-          if (progressInterval) clearInterval(progressInterval);
-          if (uploadTimeout) clearTimeout(uploadTimeout);
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+          }
+          if (uploadTimeoutRef.current) {
+            clearTimeout(uploadTimeoutRef.current);
+            uploadTimeoutRef.current = null;
+          }
           throw new Error('CORS configuration issue. Please contact support or check Firebase Storage settings.');
         }
         
@@ -238,8 +259,14 @@ export default function ImageUpload({
           console.log('Base64 fallback successful');
           
           setUploadProgress(100);
-          if (progressInterval) clearInterval(progressInterval);
-          if (uploadTimeout) clearTimeout(uploadTimeout);
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+          }
+          if (uploadTimeoutRef.current) {
+            clearTimeout(uploadTimeoutRef.current);
+            uploadTimeoutRef.current = null;
+          }
           
           setTimeout(() => {
             onImageSelect(base64String, selectedFile.name);
@@ -247,8 +274,14 @@ export default function ImageUpload({
           }, 500);
         };
         reader.onerror = () => {
-          if (progressInterval) clearInterval(progressInterval);
-          if (uploadTimeout) clearTimeout(uploadTimeout);
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+          }
+          if (uploadTimeoutRef.current) {
+            clearTimeout(uploadTimeoutRef.current);
+            uploadTimeoutRef.current = null;
+          }
           throw new Error('Failed to process image. Please try again.');
         };
         reader.readAsDataURL(croppedFile);
@@ -256,8 +289,14 @@ export default function ImageUpload({
 
     } catch (error) {
       console.error('Error uploading cropped image:', error);
-      if (progressInterval) clearInterval(progressInterval);
-      if (uploadTimeout) clearTimeout(uploadTimeout);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      if (uploadTimeoutRef.current) {
+        clearTimeout(uploadTimeoutRef.current);
+        uploadTimeoutRef.current = null;
+      }
       onUploadError(`Failed to upload image: ${(error as any).message || 'Please try again.'}`);
     } finally {
       setIsUploading(false);
