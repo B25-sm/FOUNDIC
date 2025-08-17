@@ -7,6 +7,7 @@ import HydrationSuppressor from './components/HydrationSuppressor'
 import FirebaseStatus from './components/FirebaseStatus'
 import ToastNotificationSystem from './components/ToastNotification'
 import { ThemeProvider } from './components/ThemeProvider'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -38,18 +39,20 @@ export default function RootLayout({
       <body className={`${inter.className}`}>
         <HydrationSuppressor />
         <FirebaseStatus />
-        <ThemeProvider>
-          <div className="flex h-screen">
-            <Sidebar />
-            <div className="flex-1 flex flex-col lg:ml-64">
-              <Navbar />
-              <main className="flex-1 overflow-auto pt-16">
-                {children}
-              </main>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <div className="flex h-screen">
+              <Sidebar />
+              <div className="flex-1 flex flex-col lg:ml-64">
+                <Navbar />
+                <main className="flex-1 overflow-auto pt-16">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
-          <ToastNotificationSystem />
-        </ThemeProvider>
+            <ToastNotificationSystem />
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

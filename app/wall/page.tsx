@@ -499,32 +499,37 @@ export default function WallPage() {
   const handleFollow = async (authorId: string) => {
     if (!user || authorId === user.uid) return;
     
-    const userRef = doc(db, 'users', user.uid);
-    const authorRef = doc(db, 'users', authorId);
-    
-    const isFollowing = following.includes(authorId);
-    
-    if (isFollowing) {
-      // Unfollow
-      await updateDoc(userRef, {
-        following: arrayRemove(authorId)
-      });
-      await updateDoc(authorRef, {
-        followers: arrayRemove(user.uid)
-      });
-      setFollowing(prev => prev.filter(id => id !== authorId));
-    } else {
-      // Follow
-      await updateDoc(userRef, {
-        following: arrayUnion(authorId)
-      });
-      await updateDoc(authorRef, {
-        followers: arrayUnion(user.uid)
-      });
-      setFollowing(prev => [...prev, authorId]);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const authorRef = doc(db, 'users', authorId);
       
-      // Create follow notification
-      await createFollowNotification(authorId, user.uid);
+      const isFollowing = following.includes(authorId);
+      
+      if (isFollowing) {
+        // Unfollow
+        await updateDoc(userRef, {
+          following: arrayRemove(authorId)
+        });
+        await updateDoc(authorRef, {
+          followers: arrayRemove(user.uid)
+        });
+        setFollowing(prev => prev.filter(id => id !== authorId));
+      } else {
+        // Follow
+        await updateDoc(userRef, {
+          following: arrayUnion(authorId)
+        });
+        await updateDoc(authorRef, {
+          followers: arrayUnion(user.uid)
+        });
+        setFollowing(prev => [...prev, authorId]);
+        
+        // Create follow notification
+        await createFollowNotification(authorId, user.uid);
+      }
+    } catch (error) {
+      console.error('Error updating follow status:', error);
+      alert('Failed to update follow status. Please try again.');
     }
   };
 

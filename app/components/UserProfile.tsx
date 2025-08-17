@@ -19,49 +19,14 @@ import {
   orderBy
 } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { UserData, UserPost, Message } from '../types';
 
 interface UserProfileProps {
   userId: string;
   onClose: () => void;
 }
 
-interface UserData {
-  uid: string;
-  displayName: string;
-  email: string;
-  role: string;
-  fCoins?: number;
-  followers?: string[];
-  following?: string[];
-  createdAt?: any;
-  bio?: string;
-  location?: string;
-  website?: string;
-  linkedin?: string;
-  twitter?: string;
-  company?: string;
-  position?: string;
-  industry?: string;
-  experience?: string;
-  education?: string;
-  skills?: string[];
-  achievements?: string[];
-  profilePicture?: string; // Added for profile picture
-  instagram?: string; // Added for social links
-  github?: string; // Added for social links
-  portfolio?: string; // Added for social links
-  resume?: string; // Added for social links
-}
-
-interface UserPost {
-  id: string;
-  content: string;
-  type: string;
-  likes: string[];
-  comments: any[];
-  createdAt: any;
-  images?: string[];
-}
+// Types are now imported from ../types
 
 export default function UserProfile({ userId, onClose }: UserProfileProps) {
   const [user] = useAuthState(auth);

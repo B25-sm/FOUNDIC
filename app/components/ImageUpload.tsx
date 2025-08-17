@@ -143,6 +143,10 @@ export default function ImageUpload({
   const handleCropConfirm = async () => {
     if (!selectedFile || !imageRef.current) return;
 
+    // Declare variables in function scope to be accessible in catch block
+    let progressInterval: NodeJS.Timeout | null = null;
+    let uploadTimeout: NodeJS.Timeout | null = null;
+
     try {
       setIsUploading(true);
       onUploadStart();
@@ -152,8 +156,6 @@ export default function ImageUpload({
       console.log('Starting cropped image upload:', selectedFile.name);
 
       // Simulate progress for better UX
-      let progressInterval: NodeJS.Timeout;
-      let uploadTimeout: NodeJS.Timeout;
       let currentProgress = 10;
       
       const simulateProgress = () => {
@@ -203,8 +205,8 @@ export default function ImageUpload({
         console.log('Direct upload successful! Download URL:', downloadURL);
         
         setUploadProgress(100);
-        clearInterval(progressInterval);
-        clearTimeout(uploadTimeout);
+        if (progressInterval) clearInterval(progressInterval);
+        if (uploadTimeout) clearTimeout(uploadTimeout);
         
         // Small delay for user to see 100%
         setTimeout(() => {
@@ -222,8 +224,8 @@ export default function ImageUpload({
         
         if (isCorsError) {
           console.error('CORS error detected. Please configure Firebase Storage CORS settings.');
-          clearInterval(progressInterval);
-          clearTimeout(uploadTimeout);
+          if (progressInterval) clearInterval(progressInterval);
+          if (uploadTimeout) clearTimeout(uploadTimeout);
           throw new Error('CORS configuration issue. Please contact support or check Firebase Storage settings.');
         }
         
@@ -236,8 +238,8 @@ export default function ImageUpload({
           console.log('Base64 fallback successful');
           
           setUploadProgress(100);
-          clearInterval(progressInterval);
-          clearTimeout(uploadTimeout);
+          if (progressInterval) clearInterval(progressInterval);
+          if (uploadTimeout) clearTimeout(uploadTimeout);
           
           setTimeout(() => {
             onImageSelect(base64String, selectedFile.name);
@@ -245,8 +247,8 @@ export default function ImageUpload({
           }, 500);
         };
         reader.onerror = () => {
-          clearInterval(progressInterval);
-          clearTimeout(uploadTimeout);
+          if (progressInterval) clearInterval(progressInterval);
+          if (uploadTimeout) clearTimeout(uploadTimeout);
           throw new Error('Failed to process image. Please try again.');
         };
         reader.readAsDataURL(croppedFile);
