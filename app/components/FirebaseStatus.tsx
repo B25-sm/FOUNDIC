@@ -22,15 +22,13 @@ export default function FirebaseStatus() {
       }
     };
 
-    checkConnection();
+    // Delay the connection check to not block initial render
+    const timeout = setTimeout(checkConnection, 1000);
+    return () => clearTimeout(timeout);
   }, []);
 
   if (status === 'checking') {
-    return (
-      <div className="fixed bottom-4 right-4 bg-midnight-800 text-support px-3 py-2 rounded-lg text-sm">
-        🔄 Checking Firebase connection...
-      </div>
-    );
+    return null; // Don't show checking status to avoid UI flash
   }
 
   if (status === 'error') {

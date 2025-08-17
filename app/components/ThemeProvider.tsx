@@ -34,8 +34,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [applyTheme]);
 
   useEffect(() => {
-    setMounted(true);
-    
     // Load theme from localStorage or default to dark
     const savedTheme = localStorage.getItem('foundic-theme') as Theme;
     if (savedTheme) {
@@ -47,6 +45,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeState(systemTheme);
       applyTheme(systemTheme);
     }
+    
+    // Set mounted after theme is applied to prevent flash
+    setMounted(true);
   }, [applyTheme]);
 
   return (

@@ -49,7 +49,7 @@ export default function AuthUser() {
         onClick={() => setDropdownOpen(!dropdownOpen)}
         className="flex items-center gap-2 p-2 rounded-lg hover:bg-midnight-800 transition-colors duration-200 group"
       >
-        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gold-950 rounded-full flex items-center justify-center text-midnight-950 font-bold text-sm sm:text-base">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-teal-500 rounded-full flex items-center justify-center text-midnight-950 font-bold text-sm sm:text-base">
           {avatarInitial}
         </div>
         <div className="hidden sm:block text-left">
@@ -74,7 +74,7 @@ export default function AuthUser() {
         <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-midnight-900 border border-midnight-700 rounded-lg shadow-midnight-xl z-50">
           <div className="p-4 border-b border-midnight-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gold-950 rounded-full flex items-center justify-center text-midnight-950 font-bold">
+              <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-midnight-950 font-bold">
                 {avatarInitial}
               </div>
               <div className="flex-1 min-w-0">
@@ -88,7 +88,7 @@ export default function AuthUser() {
             <a
               href="/profile"
               onClick={() => setDropdownOpen(false)}
-              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-gold-950 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
+              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-teal-500 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
             >
               <span className="text-lg">👤</span>
               <span>Profile</span>
@@ -96,7 +96,7 @@ export default function AuthUser() {
             <a
               href="/profile/edit"
               onClick={() => setDropdownOpen(false)}
-              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-gold-950 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
+              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-teal-500 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
             >
               <span className="text-lg">✏️</span>
               <span>Edit Profile</span>
@@ -104,7 +104,7 @@ export default function AuthUser() {
             <a
               href="/dashboard"
               onClick={() => setDropdownOpen(false)}
-              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-gold-950 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
+              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-teal-500 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
             >
               <span className="text-lg">📊</span>
               <span>Dashboard</span>
@@ -112,7 +112,7 @@ export default function AuthUser() {
             <a
               href="/settings"
               onClick={() => setDropdownOpen(false)}
-              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-gold-950 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
+              className="flex items-center gap-3 w-full px-3 py-2 text-support hover:text-teal-500 hover:bg-midnight-800 rounded-lg transition-colors duration-200"
             >
               <span className="text-lg">⚙️</span>
               <span>Settings</span>

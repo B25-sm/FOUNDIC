@@ -5,21 +5,22 @@ import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import HydrationSuppressor from './components/HydrationSuppressor'
 import FirebaseStatus from './components/FirebaseStatus'
+import ToastNotificationSystem from './components/ToastNotification'
 import { ThemeProvider } from './components/ThemeProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Foundic',
+  title: 'Foundic Network',
   description: 'The Cleanest Space for Startup Founders',
   openGraph: {
-    title: 'Foundic',
+    title: 'Foundic Network',
     description: 'The Cleanest Space for Startup Founders',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Foundic',
+    title: 'Foundic Network',
     description: 'The Cleanest Space for Startup Founders',
   },
 }
@@ -32,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='goldGradient' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%23F59E0B;stop-opacity:1' /><stop offset='100%' style='stop-color:%23D97706;stop-opacity:1' /></linearGradient></defs><circle cx='16' cy='16' r='15' fill='url(%23goldGradient)' stroke='%2392400E' stroke-width='1'/><rect x='10' y='8' width='12' height='2' fill='%230F172A'/><rect x='10' y='12' width='8' height='2' fill='%230F172A'/><rect x='10' y='18' width='8' height='2' fill='%230F172A'/></svg>" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='8' y='8' width='16' height='16' rx='2' fill='%2314b8a6' transform='rotate(45 16 16)'/><path d='M12 10 L16 14 L20 10' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M12 22 L16 18 L20 22' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M10 12 L14 16 L10 20' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M22 12 L18 16 L22 20' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
       </head>
       <body className={`${inter.className}`}>
         <HydrationSuppressor />
@@ -47,6 +48,7 @@ export default function RootLayout({
               </main>
             </div>
           </div>
+          <ToastNotificationSystem />
         </ThemeProvider>
       </body>
     </html>

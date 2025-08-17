@@ -6,6 +6,7 @@ import { auth } from '../../src/firebase';
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, Timestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import app from '../../src/firebase';
 import AuthGuard from '../components/AuthGuard';
+import { createPodInterestNotification } from '../utils/notifications';
 
 const db = getFirestore(app);
 
@@ -53,12 +54,17 @@ export default function PodsPage() {
     setCreating(false);
   };
 
-  const handleJoin = async (podId: string, members: string[]) => {
+  const handleJoin = async (podId: string, members: string[], createdBy: string) => {
     if (!user || members.includes(user.uid)) return;
     const podRef = doc(db, 'pods', podId);
     await updateDoc(podRef, {
       members: arrayUnion(user.uid),
     });
+
+    // Create pod interest notification for the pod creator
+    if (createdBy && createdBy !== user.uid) {
+      await createPodInterestNotification(createdBy, user.uid, podId);
+    }
   };
 
   return (
@@ -117,7 +123,7 @@ export default function PodsPage() {
                 <div className="text-support/80 mb-3 sm:mb-2 text-left text-sm sm:text-base">Goal: {pod.goal}</div>
                 <div className="flex flex-col sm:flex-row sm:gap-4 sm:items-center text-support/70 text-sm">
                   <span>Members: {pod.members?.length || 1}</span>
-                  <button className="btn-secondary text-xs sm:text-sm mt-2 sm:mt-0" onClick={() => handleJoin(pod.id, pod.members || [])} disabled={pod.members?.includes(user?.uid)}>Join Pod</button>
+                  <button className="btn-secondary text-xs sm:text-sm mt-2 sm:mt-0" onClick={() => handleJoin(pod.id, pod.members || [], pod.createdBy)} disabled={pod.members?.includes(user?.uid)}>Join Pod</button>
                 </div>
               </div>
             ))}

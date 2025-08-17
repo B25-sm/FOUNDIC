@@ -163,7 +163,7 @@ export default function SearchBar() {
               setShowResults(true);
             }}
             onFocus={() => setShowResults(true)}
-            className="w-full px-4 py-2.5 pl-11 pr-10 bg-midnight-900/60 border border-midnight-700/50 text-support placeholder-midnight-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-950/50 focus:border-gold-950/50 transition-all duration-300 text-sm backdrop-blur-sm shadow-inner"
+            className="w-full px-4 py-2.5 pl-11 pr-10 bg-midnight-900/60 border border-midnight-700/50 text-support placeholder-midnight-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 transition-all duration-300 text-sm backdrop-blur-sm shadow-inner"
           />
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <svg className="h-4 w-4 text-midnight-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,7 +193,7 @@ export default function SearchBar() {
         <div className="absolute top-full left-0 right-0 mt-2 bg-midnight-900/95 backdrop-blur-md border border-midnight-700/50 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
           {isSearching ? (
             <div className="p-4 text-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gold-950 mx-auto"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500 mx-auto"></div>
               <p className="text-sm text-support/60 mt-2">Searching...</p>
             </div>
           ) : results.length > 0 ? (
@@ -220,7 +220,7 @@ export default function SearchBar() {
                       setShowResults(false);
                       router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-midnight-800/60 transition-colors duration-200 text-gold-950 font-medium"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-midnight-800/60 transition-colors duration-200 text-teal-500 font-medium"
                   >
                     <span className="text-lg">🔍</span>
                     <span>View all results for "{searchTerm}"</span>
@@ -236,7 +236,7 @@ export default function SearchBar() {
                   setShowResults(false);
                   router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
                 }}
-                className="mt-2 text-gold-950 hover:text-gold-800 text-sm font-medium"
+                className="mt-2 text-teal-500 hover:text-teal-600 text-sm font-medium"
               >
                 Search anyway
               </button>

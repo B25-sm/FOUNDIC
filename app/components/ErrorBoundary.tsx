@@ -35,7 +35,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center bg-midnight-950 text-support px-4">
           <div className="max-w-md w-full text-center">
             <div className="text-6xl mb-4">😵</div>
-            <h1 className="text-2xl font-bold text-gold-950 mb-4">Oops! Something went wrong</h1>
+            <h1 className="text-2xl font-bold text-teal-500 mb-4">Oops! Something went wrong</h1>
             <p className="text-support/80 mb-6">
               We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.
             </p>
@@ -85,7 +85,7 @@ export function ErrorMessage({
   return (
     <div className="text-center py-8">
       <div className="text-4xl mb-4">⚠️</div>
-      <h3 className="text-lg font-semibold text-gold-950 mb-2">{title}</h3>
+      <h3 className="text-lg font-semibold text-teal-500 mb-2">{title}</h3>
       <p className="text-support/80 mb-4">{message}</p>
       {onRetry && (
         <button onClick={onRetry} className="btn-primary">
@@ -113,7 +113,7 @@ export function NotFound({ message = "The page you're looking for doesn't exist.
     <div className="min-h-screen flex items-center justify-center bg-midnight-950 text-support px-4">
       <div className="max-w-md w-full text-center">
         <div className="text-6xl mb-4">🔍</div>
-        <h1 className="text-2xl font-bold text-gold-950 mb-4">Page Not Found</h1>
+        <h1 className="text-2xl font-bold text-teal-500 mb-4">Page Not Found</h1>
         <p className="text-support/80 mb-6">{message}</p>
         <a href="/" className="btn-primary">
           Go Home

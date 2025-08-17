@@ -30,11 +30,42 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');  // Only images
     }
     
+    // Allow authenticated users to upload chat images
+    match /chat-images/{fileName} {
+      allow read: if true;  // Anyone can view images
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024  // 5MB limit
+                   && request.resource.contentType.matches('image/.*');  // Only images
+    }
+    
     // Allow authenticated users to upload profile images
+    match /profile-pictures/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024  // 5MB limit
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Alternative path for profile images
     match /profile-images/{fileName} {
       allow read: if true;
       allow write: if request.auth != null 
-                   && request.resource.size < 2 * 1024 * 1024  // 2MB limit
+                   && request.resource.size < 5 * 1024 * 1024  // 5MB limit
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Cover photos and profile pictures with subfolders
+    match /profilePictures/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024  // 5MB limit
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    match /coverPictures/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024  // 5MB limit
                    && request.resource.contentType.matches('image/.*');
     }
     

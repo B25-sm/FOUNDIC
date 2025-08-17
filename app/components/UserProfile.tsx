@@ -298,7 +298,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
           <div className="text-support/60">User not found</div>
           <button
             onClick={onClose}
-            className="mt-4 px-4 py-2 bg-gold-950 text-midnight-950 rounded-lg hover:bg-gold-900 transition-colors"
+            className="mt-4 px-4 py-2 bg-teal-500 text-midnight-950 rounded-lg hover:bg-teal-600 transition-colors"
           >
             Close
           </button>
@@ -318,10 +318,10 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                 <img
                   src={userData.profilePicture}
                   alt="Profile"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gold-950"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-teal-500"
                 />
               ) : (
-                <div className="w-16 h-16 bg-gold-950 rounded-full flex items-center justify-center text-midnight-950 font-bold text-2xl">
+                <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-midnight-950 font-bold text-2xl">
                   {userData?.displayName?.[0] || userData?.email?.[0] || 'U'}
                 </div>
               )}
@@ -353,19 +353,19 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                 <h3 className="font-semibold text-support mb-3">Stats</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-xl font-bold text-gold-950">{userData?.followers?.length || 0}</div>
+                    <div className="text-xl font-bold text-teal-500">{userData?.followers?.length || 0}</div>
                     <div className="text-sm text-support/60">Followers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-gold-950">{userData?.following?.length || 0}</div>
+                    <div className="text-xl font-bold text-teal-500">{userData?.following?.length || 0}</div>
                     <div className="text-sm text-support/60">Following</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-gold-950">{userPosts.length}</div>
+                    <div className="text-xl font-bold text-teal-500">{userPosts.length}</div>
                     <div className="text-sm text-support/60">Posts</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xl font-bold text-gold-950">{userData?.fCoins || 0}</div>
+                    <div className="text-xl font-bold text-teal-500">{userData?.fCoins || 0}</div>
                     <div className="text-sm text-support/60">F-Coins</div>
                   </div>
                 </div>
@@ -407,7 +407,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.website && (
                       <div className="flex items-center gap-2 text-sm text-support/80">
                         <span>🌐</span>
-                        <a href={userData.website} target="_blank" rel="noopener noreferrer" className="text-gold-950 hover:underline">
+                        <a href={userData.website} target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
                           Website
                         </a>
                       </div>
@@ -415,7 +415,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.linkedin && (
                       <div className="flex items-center gap-2 text-sm text-support/80">
                         <span>💼</span>
-                        <a href={userData.linkedin} target="_blank" rel="noopener noreferrer" className="text-gold-950 hover:underline">
+                        <a href={userData.linkedin} target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
                           LinkedIn
                         </a>
                       </div>
@@ -423,7 +423,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.twitter && (
                       <div className="flex items-center gap-2 text-sm text-support/80">
                         <span>🐦</span>
-                        <a href={userData.twitter} target="_blank" rel="noopener noreferrer" className="text-gold-950 hover:underline">
+                        <a href={userData.twitter} target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
                           X (Twitter)
                         </a>
                       </div>
@@ -431,7 +431,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.instagram && (
                       <div className="flex items-center gap-2 text-sm text-support/80">
                         <span>📷</span>
-                        <a href={userData.instagram} target="_blank" rel="noopener noreferrer" className="text-gold-950 hover:underline">
+                        <a href={userData.instagram} target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
                           Instagram
                         </a>
                       </div>
@@ -439,7 +439,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.github && (
                       <div className="flex items-center gap-2 text-sm text-support/80">
                         <span>💻</span>
-                        <a href={userData.github} target="_blank" rel="noopener noreferrer" className="text-gold-950 hover:underline">
+                        <a href={userData.github} target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
                           GitHub
                         </a>
                       </div>
@@ -447,7 +447,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.portfolio && (
                       <div className="flex items-center gap-2 text-sm text-support/80">
                         <span>🎨</span>
-                        <a href={userData.portfolio} target="_blank" rel="noopener noreferrer" className="text-gold-950 hover:underline">
+                        <a href={userData.portfolio} target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
                           Portfolio
                         </a>
                       </div>
@@ -455,7 +455,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.resume && (
                       <div className="flex items-center gap-2 text-sm text-support/80">
                         <span>📄</span>
-                        <a href={userData.resume} target="_blank" rel="noopener noreferrer" className="text-gold-950 hover:underline">
+                        <a href={userData.resume} target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
                           Resume
                         </a>
                       </div>
@@ -493,7 +493,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     {userData.skills.map((skill, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-gold-950/20 text-gold-950 rounded-full text-xs"
+                        className="px-2 py-1 bg-teal-500/20 text-teal-500 rounded-full text-xs"
                       >
                         {skill}
                       </span>
@@ -511,7 +511,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowChatModal(true)}
-                      className="px-4 py-2 bg-gold-950 text-midnight-950 rounded-lg hover:bg-gold-900 transition-colors"
+                      className="px-4 py-2 bg-teal-500 text-midnight-950 rounded-lg hover:bg-teal-600 transition-colors"
                     >
                       💬 Message
                     </button>
@@ -520,7 +520,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                       className={`px-4 py-2 rounded-lg transition-colors ${
                         following
                           ? 'bg-midnight-700 text-support hover:bg-midnight-600'
-                          : 'bg-gold-950 text-midnight-950 hover:bg-gold-900'
+                          : 'bg-teal-500 text-midnight-950 hover:bg-teal-600'
                       }`}
                     >
                       {following ? 'Following' : 'Follow'}
@@ -589,10 +589,10 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     <img
                       src={userData.profilePicture}
                       alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover border border-gold-950"
+                      className="w-10 h-10 rounded-full object-cover border border-teal-500"
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-gold-950 rounded-full flex items-center justify-center text-midnight-950 font-bold">
+                    <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-midnight-950 font-bold">
                       {userData?.displayName?.[0] || userData?.email?.[0] || 'U'}
                     </div>
                   )}
@@ -630,7 +630,7 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                       <div
                         className={`max-w-[75%] px-3 py-2 rounded-lg ${
                           message.senderId === user?.uid
-                            ? 'bg-gold-950 text-midnight-950'
+                            ? 'bg-teal-500 text-midnight-950'
                             : 'bg-midnight-800 text-support'
                         }`}
                       >
@@ -667,13 +667,13 @@ export default function UserProfile({ userId, onClose }: UserProfileProps) {
                     onChange={(e) => setChatMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type a message..."
-                    className="flex-1 px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                    className="flex-1 px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     disabled={sendingMessage}
                   />
                   <button
                     onClick={sendMessage}
                     disabled={!chatMessage.trim() || sendingMessage}
-                    className="px-4 py-2 bg-gold-950 text-midnight-950 rounded-lg hover:bg-gold-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-teal-500 text-midnight-950 rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {sendingMessage ? 'Sending...' : 'Send'}
                   </button>

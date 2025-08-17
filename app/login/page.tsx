@@ -83,12 +83,29 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-white text-gray-900">
       <div className="card p-8 max-w-md w-full text-center">
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gold-950 rounded-lg flex items-center justify-center">
-            <span className="text-white font-black text-xl">F</span>
+        <div className="flex flex-col items-center justify-center gap-4 mb-6">
+          {/* Login Logo */}
+          <div className="flex flex-col items-center gap-3">
+            {/* Logo Icon */}
+            <div className="relative">
+              <svg width="48" height="48" viewBox="0 0 48 48" className="text-teal-500">
+                {/* Diamond background */}
+                <rect x="12" y="12" width="24" height="24" rx="3" fill="currentColor" transform="rotate(45 24 24)" />
+                {/* Arrow elements */}
+                <path d="M18 15 L24 21 L30 15" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M18 33 L24 27 L30 33" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M15 18 L21 24 L15 30" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M33 18 L27 24 L33 30" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            {/* Text */}
+            <div className="flex flex-col items-center leading-none">
+              <span className="text-2xl font-bold text-gray-900 mb-1">Foundic</span>
+              <span className="text-teal-500 font-semibold text-sm tracking-widest uppercase">Network</span>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome to Foundic
+          <h1 className="text-2xl font-bold text-gray-900 mt-2">
+            Welcome Back
           </h1>
         </div>
         <p className="mb-8 text-gray-600 text-lg">

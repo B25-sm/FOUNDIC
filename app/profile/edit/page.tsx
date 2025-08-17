@@ -27,6 +27,7 @@ interface ProfileData {
   portfolio: string;
   resume: string;
   whatsapp: string;
+  facebook: string;
   profilePicture: string;
 }
 
@@ -34,6 +35,7 @@ export default function EditProfilePage() {
   const [user] = useAuthState(auth);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -56,6 +58,7 @@ export default function EditProfilePage() {
     portfolio: '',
     resume: '',
     whatsapp: '',
+    facebook: '',
     profilePicture: ''
   });
 
@@ -88,6 +91,7 @@ export default function EditProfilePage() {
             portfolio: data.portfolio || '',
             resume: data.resume || '',
             whatsapp: data.whatsapp || '',
+            facebook: data.facebook || '',
             profilePicture: data.profilePicture || ''
           });
         }
@@ -104,7 +108,12 @@ export default function EditProfilePage() {
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user) {
+      console.log('No file selected or user not authenticated');
+      return;
+    }
+
+    console.log('Starting profile picture upload:', { fileName: file.name, fileSize: file.size, fileType: file.type });
 
     // Validate file type and size
     if (!file.type.startsWith('image/')) {
@@ -124,20 +133,52 @@ export default function EditProfilePage() {
       const fileName = `profile-pictures/${user.uid}_${timestamp}_${file.name}`;
       const storageRef = ref(storage, fileName);
 
+      console.log('Uploading to Firebase Storage:', fileName);
+      
       // Upload the file
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      console.log('Upload successful, download URL:', downloadURL);
 
-      // Update profile data
+      // Update profile data locally
       setProfileData(prev => ({
         ...prev,
         profilePicture: downloadURL
       }));
 
-      toast.success('Profile picture uploaded successfully!');
+      // Immediately save to Firestore
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        profilePicture: downloadURL,
+        updatedAt: new Date()
+      });
+
+      console.log('Profile picture saved to Firestore');
+      toast.success('Profile picture uploaded and saved successfully!');
+      
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload profile picture');
+      
+      // More detailed error handling
+      if (error instanceof Error) {
+        if (error.message.includes('CORS') || 
+            error.message.includes('Access-Control-Allow-Origin') ||
+            error.message.includes('blocked by CORS policy')) {
+          toast.error('CORS configuration issue. Please contact support.');
+          console.error('CORS error detected. Run: gsutil cors set cors.json gs://foundic-77bc6.appspot.com');
+        } else if (error.message.includes('storage/unauthorized')) {
+          toast.error('Permission denied. Please check Firebase Storage rules.');
+        } else if (error.message.includes('storage/canceled')) {
+          toast.error('Upload was canceled. Please try again.');
+        } else if (error.message.includes('storage/quota-exceeded')) {
+          toast.error('Storage quota exceeded. Please contact support.');
+        } else {
+          toast.error(`Upload failed: ${error.message}`);
+        }
+      } else {
+        toast.error('Failed to upload profile picture. Please try again.');
+      }
     } finally {
       setUploadingImage(false);
     }
@@ -147,6 +188,7 @@ export default function EditProfilePage() {
     if (!user) return;
 
     setSaving(true);
+    setSaved(false);
     try {
       await updateDoc(doc(db, 'users', user.uid), {
         displayName: profileData.displayName,
@@ -165,13 +207,20 @@ export default function EditProfilePage() {
         instagram: profileData.instagram,
         github: profileData.github,
         portfolio: profileData.portfolio,
-                    resume: profileData.resume,
-            whatsapp: profileData.whatsapp,
+        resume: profileData.resume,
+        whatsapp: profileData.whatsapp,
+        facebook: profileData.facebook,
         profilePicture: profileData.profilePicture,
         updatedAt: new Date()
       });
 
+      setSaved(true);
       toast.success('Profile updated successfully!');
+      
+      // Reset saved state after 2 seconds
+      setTimeout(() => {
+        setSaved(false);
+      }, 2000);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -226,9 +275,27 @@ export default function EditProfilePage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2 bg-gold-950 text-midnight-950 rounded-lg font-medium hover:bg-gold-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
+                saved 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-teal-950 text-midnight-950 hover:bg-teal-900'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-midnight-950"></div>
+                  Saving...
+                </span>
+              ) : saved ? (
+                <span className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Saved!
+                </span>
+              ) : (
+                'Save Changes'
+              )}
             </button>
           </div>
 
@@ -244,16 +311,16 @@ export default function EditProfilePage() {
                       <img
                         src={profileData.profilePicture}
                         alt="Profile"
-                        className="w-20 h-20 rounded-full object-cover border-2 border-gold-950"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-teal-950"
                       />
                     ) : (
-                      <div className="w-20 h-20 bg-gold-950 rounded-full flex items-center justify-center text-midnight-950 font-bold text-2xl">
+                      <div className="w-20 h-20 bg-teal-950 rounded-full flex items-center justify-center text-midnight-950 font-bold text-2xl">
                         {profileData.displayName?.[0] || user?.displayName?.[0] || user?.email?.[0] || 'U'}
                       </div>
                     )}
                     {uploadingImage && (
                       <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gold-950"></div>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-950"></div>
                       </div>
                     )}
                   </div>
@@ -287,7 +354,7 @@ export default function EditProfilePage() {
                       type="text"
                       value={profileData.displayName}
                       onChange={(e) => handleInputChange('displayName', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="Your display name"
                     />
                   </div>
@@ -296,7 +363,7 @@ export default function EditProfilePage() {
                     <select
                       value={profileData.role}
                       onChange={(e) => handleInputChange('role', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support focus:outline-none focus:ring-2 focus:ring-teal-950"
                     >
                       <option value="">Select your role</option>
                       <option value="founder">Founder</option>
@@ -312,7 +379,7 @@ export default function EditProfilePage() {
                       type="text"
                       value={profileData.location}
                       onChange={(e) => handleInputChange('location', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="City, Country"
                     />
                   </div>
@@ -326,7 +393,7 @@ export default function EditProfilePage() {
                   value={profileData.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950 resize-none"
+                  className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950 resize-none"
                   placeholder="Tell us about yourself, your background, and what you're working on..."
                 />
               </div>
@@ -341,7 +408,7 @@ export default function EditProfilePage() {
                       type="text"
                       value={profileData.company}
                       onChange={(e) => handleInputChange('company', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="Your company name"
                     />
                   </div>
@@ -351,7 +418,7 @@ export default function EditProfilePage() {
                       type="text"
                       value={profileData.position}
                       onChange={(e) => handleInputChange('position', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="Your job title"
                     />
                   </div>
@@ -361,7 +428,7 @@ export default function EditProfilePage() {
                       type="text"
                       value={profileData.industry}
                       onChange={(e) => handleInputChange('industry', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="e.g., Technology, Healthcare, Finance"
                     />
                   </div>
@@ -381,12 +448,12 @@ export default function EditProfilePage() {
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                      className="flex-1 px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="flex-1 px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="Add a skill"
                     />
                     <button
                       onClick={addSkill}
-                      className="px-4 py-2 bg-gold-950 text-midnight-950 rounded-lg hover:bg-gold-900 transition-colors"
+                      className="px-4 py-2 bg-teal-950 text-midnight-950 rounded-lg hover:bg-teal-900 transition-colors"
                     >
                       Add
                     </button>
@@ -395,12 +462,12 @@ export default function EditProfilePage() {
                     {profileData.skills.map((skill, index) => (
                       <span
                         key={index}
-                        className="flex items-center gap-2 px-3 py-1 bg-gold-950/20 text-gold-950 rounded-full text-sm"
+                        className="flex items-center gap-2 px-3 py-1 bg-teal-950/20 text-teal-950 rounded-full text-sm"
                       >
                         {skill}
                         <button
                           onClick={() => removeSkill(skill)}
-                          className="text-gold-950 hover:text-gold-800"
+                          className="text-teal-950 hover:text-teal-800"
                         >
                           ×
                         </button>
@@ -420,7 +487,7 @@ export default function EditProfilePage() {
                       type="url"
                       value={profileData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="https://yourwebsite.com"
                     />
                   </div>
@@ -430,7 +497,7 @@ export default function EditProfilePage() {
                       type="url"
                       value={profileData.linkedin}
                       onChange={(e) => handleInputChange('linkedin', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="https://linkedin.com/in/yourprofile"
                     />
                   </div>
@@ -440,7 +507,7 @@ export default function EditProfilePage() {
                       type="url"
                       value={profileData.twitter}
                       onChange={(e) => handleInputChange('twitter', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="https://twitter.com/yourhandle"
                     />
                   </div>
@@ -450,7 +517,7 @@ export default function EditProfilePage() {
                       type="url"
                       value={profileData.instagram}
                       onChange={(e) => handleInputChange('instagram', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="https://instagram.com/yourhandle"
                     />
                   </div>
@@ -460,7 +527,7 @@ export default function EditProfilePage() {
                       type="url"
                       value={profileData.github}
                       onChange={(e) => handleInputChange('github', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="https://github.com/yourusername"
                     />
                   </div>
@@ -470,7 +537,7 @@ export default function EditProfilePage() {
                       type="url"
                       value={profileData.portfolio}
                       onChange={(e) => handleInputChange('portfolio', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="https://yourportfolio.com"
                     />
                   </div>
@@ -480,7 +547,7 @@ export default function EditProfilePage() {
                       type="url"
                       value={profileData.resume}
                       onChange={(e) => handleInputChange('resume', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="https://link-to-your-resume.pdf"
                     />
                   </div>
@@ -490,8 +557,18 @@ export default function EditProfilePage() {
                       type="tel"
                       value={profileData.whatsapp}
                       onChange={(e) => handleInputChange('whatsapp', e.target.value)}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
                       placeholder="+1234567890 (with country code)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-support/80 mb-2">📘 Facebook</label>
+                    <input
+                      type="url"
+                      value={profileData.facebook}
+                      onChange={(e) => handleInputChange('facebook', e.target.value)}
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950"
+                      placeholder="https://facebook.com/yourprofile"
                     />
                   </div>
                 </div>
@@ -507,7 +584,7 @@ export default function EditProfilePage() {
                       value={profileData.experience}
                       onChange={(e) => handleInputChange('experience', e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950 resize-none"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950 resize-none"
                       placeholder="Brief overview of your experience..."
                     />
                   </div>
@@ -517,7 +594,7 @@ export default function EditProfilePage() {
                       value={profileData.education}
                       onChange={(e) => handleInputChange('education', e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-gold-950 resize-none"
+                      className="w-full px-3 py-2 bg-midnight-800 border border-midnight-700 rounded-lg text-support placeholder-support/50 focus:outline-none focus:ring-2 focus:ring-teal-950 resize-none"
                       placeholder="Your educational background..."
                     />
                   </div>

@@ -9,12 +9,17 @@ import toast from 'react-hot-toast';
 interface Notification {
   id: string;
   userId: string;
-  type: 'pod_invite' | 'dna_match' | 'message' | 'admin_action' | 'system';
+  type: 'like' | 'comment' | 'follow' | 'message' | 'pod_invite' | 'dna_match' | 'admin_action' | 'system' | 'pod_interest';
   title: string;
   message: string;
   read: boolean;
   createdAt: any;
   data?: any;
+  actionUserId?: string;
+  actionUserName?: string;
+  actionUserAvatar?: string;
+  postId?: string;
+  podId?: string;
 }
 
 export default function NotificationSystem() {
@@ -67,9 +72,13 @@ export default function NotificationSystem() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'pod_invite': return '🚀';
-      case 'dna_match': return '🧬';
+      case 'like': return '❤️';
+      case 'comment': return '💬';
+      case 'follow': return '👤';
       case 'message': return '💬';
+      case 'pod_invite': return '🚀';
+      case 'pod_interest': return '🚀';
+      case 'dna_match': return '🧬';
       case 'admin_action': return '🛡️';
       case 'system': return '🔔';
       default: return '📢';
@@ -78,9 +87,13 @@ export default function NotificationSystem() {
 
   const getNotificationColor = (type: string) => {
     switch (type) {
-      case 'pod_invite': return 'text-gold-950';
-      case 'dna_match': return 'text-blue-400';
+      case 'like': return 'text-red-400';
+      case 'comment': return 'text-blue-400';
+      case 'follow': return 'text-green-400';
       case 'message': return 'text-green-400';
+      case 'pod_invite': return 'text-teal-500';
+      case 'pod_interest': return 'text-teal-500';
+      case 'dna_match': return 'text-blue-400';
       case 'admin_action': return 'text-red-400';
       case 'system': return 'text-support';
       default: return 'text-support';
@@ -94,7 +107,7 @@ export default function NotificationSystem() {
       {/* Notification Bell */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 text-support hover:text-gold-950 transition-colors"
+        className="relative p-2 text-support hover:text-teal-500 transition-colors"
       >
         <span className="text-xl">🔔</span>
         {unreadCount > 0 && (
@@ -112,7 +125,7 @@ export default function NotificationSystem() {
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs text-gold-950 hover:text-gold-900 transition-colors"
+                className="text-xs text-teal-500 hover:text-teal-600 transition-colors"
               >
                 Mark all read
               </button>
@@ -143,7 +156,7 @@ export default function NotificationSystem() {
                           {notification.title}
                         </h4>
                         {!notification.read && (
-                          <span className="w-2 h-2 bg-gold-950 rounded-full flex-shrink-0"></span>
+                          <span className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0"></span>
                         )}
                       </div>
                       <p className="text-support/80 text-xs mb-1">

@@ -198,7 +198,7 @@ export default function SettingsPage() {
         <main className="min-h-screen bg-midnight-950 text-support px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-950 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-950 mx-auto mb-4"></div>
               <p className="text-support/60">Loading settings...</p>
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function SettingsPage() {
                         onClick={() => handleSettingChange('theme', 'dark')}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
                           settings.theme === 'dark'
-                            ? 'border-gold-950 bg-gold-950/10 text-gold-950'
+                            ? 'border-teal-950 bg-teal-950/10 text-teal-950'
                             : 'border-gray-300 dark:border-midnight-700 bg-gray-50 dark:bg-midnight-800 text-gray-900 dark:text-white hover:border-gray-400 dark:hover:border-midnight-600'
                         }`}
                       >
@@ -242,7 +242,7 @@ export default function SettingsPage() {
                         onClick={() => handleSettingChange('theme', 'light')}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
                           settings.theme === 'light'
-                            ? 'border-gold-950 bg-gold-950/10 text-gold-950'
+                            ? 'border-teal-950 bg-teal-950/10 text-teal-950'
                             : 'border-gray-300 dark:border-midnight-700 bg-gray-50 dark:bg-midnight-800 text-gray-900 dark:text-white hover:border-gray-400 dark:hover:border-midnight-600'
                         }`}
                       >
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                     <button
                       onClick={() => handleSettingChange('emailNotifications', !settings.emailNotifications)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        settings.emailNotifications ? 'bg-gold-950' : 'bg-gray-300 dark:bg-midnight-700'
+                        settings.emailNotifications ? 'bg-teal-950' : 'bg-gray-300 dark:bg-midnight-700'
                       }`}
                     >
                       <span
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                     <button
                       onClick={() => handleSettingChange('pushNotifications', !settings.pushNotifications)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        settings.pushNotifications ? 'bg-gold-950' : 'bg-gray-300 dark:bg-midnight-700'
+                        settings.pushNotifications ? 'bg-teal-950' : 'bg-gray-300 dark:bg-midnight-700'
                       }`}
                     >
                       <span
@@ -557,7 +557,7 @@ export default function SettingsPage() {
           {/* Save Status */}
           {saving && (
             <div className="fixed bottom-4 right-4 bg-midnight-900 border border-midnight-700 rounded-lg px-4 py-2 flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gold-950"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-950"></div>
               <span className="text-sm text-gray-900 dark:text-white">Saving...</span>
             </div>
           )}

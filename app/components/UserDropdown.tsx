@@ -52,9 +52,9 @@ export default function UserDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-2 text-gray-600 hover:text-gold-950 hover:bg-gray-100 rounded-lg transition-colors"
+        className="flex items-center gap-2 p-2 text-gray-600 hover:text-teal-500 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        <div className="w-8 h-8 bg-gold-950 rounded-full flex items-center justify-center text-white font-bold text-sm">
+        <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
           {user.displayName?.[0] || user.email?.[0] || 'U'}
         </div>
         <svg 

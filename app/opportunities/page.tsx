@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '../../src/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, getDoc, where } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove, getDoc, where, deleteDoc } from 'firebase/firestore';
 import AuthGuard from '../components/AuthGuard';
+import { createNotification } from '../utils/notifications';
 
 interface Opportunity {
   id: string;
@@ -127,6 +128,10 @@ export default function OpportunitiesPage() {
     if (!user) return;
 
     try {
+      // Get opportunity details for notification
+      const opportunityDoc = await getDoc(doc(db, 'opportunities', opportunityId));
+      const opportunityData = opportunityDoc.data();
+
       // Add user to opportunity applicants
       await updateDoc(doc(db, 'opportunities', opportunityId), {
         applicants: arrayUnion(user.uid)
@@ -136,6 +141,18 @@ export default function OpportunitiesPage() {
       await updateDoc(doc(db, 'users', user.uid), {
         appliedOpportunities: arrayUnion(opportunityId)
       });
+
+      // Create notification for opportunity creator
+      if (opportunityData && opportunityData.authorId !== user.uid) {
+        await createNotification({
+          userId: opportunityData.authorId,
+          type: 'pod_interest', // Using pod_interest type for opportunity applications
+          title: 'New job application',
+          message: `Someone applied for your opportunity: "${opportunityData.title}"`,
+          actionUserId: user.uid,
+          postId: opportunityId,
+        });
+      }
 
       setAppliedOpportunities(prev => [...prev, opportunityId]);
     } catch (error) {
@@ -160,6 +177,26 @@ export default function OpportunitiesPage() {
       setAppliedOpportunities(prev => prev.filter(id => id !== opportunityId));
     } catch (error) {
       console.error('Error withdrawing from opportunity:', error);
+    }
+  };
+
+  const handleDelete = async (opportunityId: string) => {
+    if (!user) return;
+
+    const confirmDelete = window.confirm('Are you sure you want to delete this opportunity? This action cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      // Delete the opportunity document
+      await deleteDoc(doc(db, 'opportunities', opportunityId));
+      
+      // Remove from local state
+      setOpportunities(prev => prev.filter(opp => opp.id !== opportunityId));
+      
+      console.log('Opportunity deleted successfully');
+    } catch (error) {
+      console.error('Error deleting opportunity:', error);
+      alert('Failed to delete opportunity. Please try again.');
     }
   };
 
@@ -211,7 +248,7 @@ export default function OpportunitiesPage() {
               <button
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === 'all' ? 'bg-gold-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  filter === 'all' ? 'bg-teal-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 All Opportunities
@@ -219,7 +256,7 @@ export default function OpportunitiesPage() {
               <button
                 onClick={() => setFilter('my-opportunities')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === 'my-opportunities' ? 'bg-gold-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  filter === 'my-opportunities' ? 'bg-teal-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 My Opportunities
@@ -227,7 +264,7 @@ export default function OpportunitiesPage() {
               <button
                 onClick={() => setFilter('applied')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === 'applied' ? 'bg-gold-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  filter === 'applied' ? 'bg-teal-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 Applied
@@ -242,7 +279,7 @@ export default function OpportunitiesPage() {
               placeholder="Search opportunities..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+              className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
             />
           </div>
 
@@ -272,7 +309,7 @@ export default function OpportunitiesPage() {
                           <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">
                             {opportunity.title}
                           </h3>
-                          <p className="text-gold-950 font-medium">{opportunity.company}</p>
+                          <p className="text-teal-950 font-medium">{opportunity.company}</p>
                         </div>
                         <div className="text-right">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -306,7 +343,7 @@ export default function OpportunitiesPage() {
                           <h4 className="font-medium text-gray-900 mb-1">Requirements:</h4>
                           <div className="flex flex-wrap gap-1">
                             {opportunity.requirements.map((req, index) => (
-                              <span key={index} className="px-2 py-1 bg-gold-50 text-gold-800 rounded text-xs">
+                              <span key={index} className="px-2 py-1 bg-teal-50 text-teal-800 rounded text-xs">
                                 {req}
                               </span>
                             ))}
@@ -329,10 +366,22 @@ export default function OpportunitiesPage() {
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                             appliedOpportunities.includes(opportunity.id) ? 
                               'bg-red-600 text-white hover:bg-red-700' :
-                              'bg-gold-950 text-white hover:bg-gold-900'
+                              'bg-teal-950 text-white hover:bg-teal-900'
                           }`}
                         >
                           {appliedOpportunities.includes(opportunity.id) ? 'Withdraw' : 'Apply'}
+                        </button>
+                      )}
+                      
+                      {user && opportunity.authorId === user.uid && (
+                        <button
+                          onClick={() => handleDelete(opportunity.id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2 justify-center"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete
                         </button>
                       )}
                       
@@ -375,7 +424,7 @@ export default function OpportunitiesPage() {
                     required
                     value={formData.title}
                     onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
                     placeholder="e.g., Senior Frontend Developer"
                   />
                 </div>
@@ -387,7 +436,7 @@ export default function OpportunitiesPage() {
                     required
                     value={formData.company}
                     onChange={(e) => setFormData({...formData, company: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
                     placeholder="e.g., Tech Corp"
                   />
                 </div>
@@ -400,7 +449,7 @@ export default function OpportunitiesPage() {
                       required
                       value={formData.location}
                       onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
                       placeholder="e.g., San Francisco, CA"
                     />
                   </div>
@@ -411,7 +460,7 @@ export default function OpportunitiesPage() {
                       required
                       value={formData.type}
                       onChange={(e) => setFormData({...formData, type: e.target.value as any})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
                     >
                       <option value="full-time">Full-time</option>
                       <option value="part-time">Part-time</option>
@@ -427,7 +476,7 @@ export default function OpportunitiesPage() {
                     type="text"
                     value={formData.salary}
                     onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
                     placeholder="e.g., $80k - $120k, Equity available"
                   />
                 </div>
@@ -439,7 +488,7 @@ export default function OpportunitiesPage() {
                     rows={4}
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
                     placeholder="Describe the role, responsibilities, and what you're looking for..."
                   />
                 </div>
@@ -450,7 +499,7 @@ export default function OpportunitiesPage() {
                     rows={3}
                     value={formData.requirements}
                     onChange={(e) => setFormData({...formData, requirements: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-950 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-950 focus:border-transparent"
                     placeholder="Enter requirements separated by commas (e.g., React, TypeScript, 3+ years experience)"
                   />
                 </div>
@@ -465,7 +514,7 @@ export default function OpportunitiesPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-gold-950 text-white rounded-lg hover:bg-gold-900 transition-colors"
+                    className="flex-1 px-4 py-2 bg-teal-950 text-white rounded-lg hover:bg-teal-900 transition-colors"
                   >
                     Post Opportunity
                   </button>

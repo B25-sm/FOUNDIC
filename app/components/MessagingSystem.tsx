@@ -114,7 +114,7 @@ export default function MessagingSystem({ matchId, matchName, isOpen, onClose }:
                 <div
                   className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
                     message.senderId === user?.uid
-                      ? 'bg-gold-950 text-midnight-950'
+                      ? 'bg-teal-500 text-midnight-950'
                       : 'bg-midnight-800 text-support'
                   }`}
                 >

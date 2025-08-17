@@ -22,7 +22,7 @@ export default function LoadingSpinner({
   };
 
   const colorClasses = {
-    gold: 'border-gold-950',
+    gold: 'border-teal-500',
     support: 'border-support',
     white: 'border-white'
   };

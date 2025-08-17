@@ -44,12 +44,12 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
     }
   }, [user, loading, userRole, router]);
 
-  // Show loading spinner while checking auth
-  if (loading || roleLoading) {
+  // Show loading spinner while checking auth - but only for a reasonable time
+  if (loading || (roleLoading && user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-midnight-950">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-950 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
           <p className="text-support">Loading...</p>
         </div>
       </div>
@@ -66,11 +66,11 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-midnight-950">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gold-950 mb-4">Access Denied</h2>
+          <h2 className="text-2xl font-bold text-teal-500 mb-4">Access Denied</h2>
           <p className="text-support mb-4">You don't have permission to access this page.</p>
           <button 
             onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-gold-950 text-midnight-950 rounded-lg hover:bg-gold-900 transition-colors"
+            className="px-4 py-2 bg-teal-500 text-midnight-950 rounded-lg hover:bg-teal-900 transition-colors"
           >
             Go to Dashboard
           </button>

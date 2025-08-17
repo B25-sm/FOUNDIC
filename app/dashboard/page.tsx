@@ -123,7 +123,7 @@ export default function DashboardPage() {
         <main className="min-h-screen bg-midnight-950 text-support px-4 py-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-950 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-950 mx-auto mb-4"></div>
               <p className="text-support/60">Loading dashboard...</p>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
           {/* User Info Card */}
           <div className="card p-4 sm:p-6 mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gold-950 rounded-full flex items-center justify-center text-midnight-950 font-bold text-xl sm:text-2xl">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-teal-950 rounded-full flex items-center justify-center text-midnight-950 font-bold text-xl sm:text-2xl">
                 {user?.displayName?.[0] || user?.email?.[0] || 'U'}
               </div>
               <div className="flex-1">
@@ -157,7 +157,7 @@ export default function DashboardPage() {
                     new Date(user.metadata.creationTime).toLocaleDateString() : 'Recently'}
                 </p>
                 <div className="flex flex-wrap gap-2 sm:gap-4 text-sm">
-                  <span className="bg-gold-950/20 text-gold-950 px-2 sm:px-3 py-1 rounded-full font-medium">
+                  <span className="bg-teal-950/20 text-teal-950 px-2 sm:px-3 py-1 rounded-full font-medium">
                     {userStats.fCoins} F-Coins
                   </span>
                   <span className="bg-midnight-800 text-support px-2 sm:px-3 py-1 rounded-full">
@@ -174,7 +174,7 @@ export default function DashboardPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="card p-4 text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-gold-950 mb-1">{userStats.fCoins}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-teal-950 mb-1">{userStats.fCoins}</div>
               <div className="text-xs sm:text-sm text-support/60">F-Coins</div>
             </div>
             <div className="card p-4 text-center">

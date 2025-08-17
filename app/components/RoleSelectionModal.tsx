@@ -56,7 +56,7 @@ export default function RoleSelectionModal({ user, onComplete }: RoleSelectionMo
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white border border-gray-200 rounded-lg p-8 max-w-md w-full shadow-xl">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gold-950 rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+          <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
             {user.displayName?.[0] || user.email?.[0] || 'U'}
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -74,7 +74,7 @@ export default function RoleSelectionModal({ user, onComplete }: RoleSelectionMo
               onClick={() => setSelectedRole(role.value)}
               className={`w-full p-4 rounded-lg border-2 transition-all ${
                 selectedRole === role.value
-                  ? 'border-gold-950 bg-gold-950/10 text-gold-950'
+                  ? 'border-teal-500 bg-teal-500/10 text-teal-500'
                   : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
               }`}
             >

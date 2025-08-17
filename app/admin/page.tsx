@@ -67,7 +67,7 @@ export default function AdminPage() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-midnight-950 text-support px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-950 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-950 mx-auto mb-4"></div>
           <p className="text-support/60 text-sm sm:text-base">Loading...</p>
         </div>
       </main>
@@ -81,7 +81,7 @@ export default function AdminPage() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-midnight-950 text-support px-4">
         <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gold-950 mb-4">Authentication Required</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-teal-950 mb-4">Authentication Required</h2>
           <p className="text-support mb-4 text-sm sm:text-base">Please sign in to access the admin panel.</p>
           <a href="/login" className="btn-primary text-sm sm:text-base">
             Sign In
@@ -95,7 +95,7 @@ export default function AdminPage() {
     return (
       <main className="min-h-screen flex items-center justify-center bg-midnight-950 text-support px-4">
         <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gold-950 mb-4">Access Denied</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-teal-950 mb-4">Access Denied</h2>
           <p className="text-support mb-4 text-sm sm:text-base">
             Only authorized administrators can access this page.
           </p>

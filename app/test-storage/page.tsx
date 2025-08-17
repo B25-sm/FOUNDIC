@@ -59,7 +59,7 @@ export default function TestStoragePage() {
   return (
     <div className="min-h-screen bg-midnight-950 text-support p-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-gold-950">Firebase Storage Test</h1>
+        <h1 className="text-3xl font-bold mb-8 text-teal-950">Firebase Storage Test</h1>
         
         <div className="bg-midnight-900 rounded-lg p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Test Image Upload</h2>
@@ -86,7 +86,7 @@ export default function TestStoragePage() {
             <button
               onClick={handleUpload}
               disabled={!file || uploading}
-              className="w-full bg-gold-950 text-midnight-950 font-bold py-3 px-6 rounded-lg hover:bg-gold-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-teal-950 text-midnight-950 font-bold py-3 px-6 rounded-lg hover:bg-teal-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploading ? 'Uploading...' : 'Test Upload'}
             </button>

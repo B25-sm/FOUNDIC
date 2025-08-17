@@ -23,6 +23,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import AuthGuard from '../components/AuthGuard';
 import WhoToFollow from '../components/WhoToFollow';
 import toast from 'react-hot-toast';
+import { createLikeNotification, createCommentNotification, createFollowNotification } from '../utils/notifications';
 
 const POST_TYPES = [
   { value: 'general', label: 'General Update', icon: '📝' },
@@ -112,6 +113,7 @@ function CommentModal({ post, open, onClose }) {
   const handleComment = async (e) => {
     e.preventDefault();
     if (!comment.trim() || !user) return;
+    
     await addDoc(collection(db, 'posts', post.id, 'comments'), {
       author: user.displayName || user.email || 'You',
       authorId: user.uid,
@@ -119,6 +121,12 @@ function CommentModal({ post, open, onClose }) {
       createdAt: Timestamp.now(),
       replies: [],
     });
+
+    // Create notification for comment
+    if (post.authorId && post.authorId !== user.uid) {
+      await createCommentNotification(post.authorId, user.uid, post.id, comment);
+    }
+    
     setComment('');
   };
 
@@ -198,7 +206,7 @@ function CommentModal({ post, open, onClose }) {
               <div className="flex items-center gap-4 mt-2">
                 <button
                   onClick={() => startReply(c.id)}
-                  className="text-xs text-gray-600 hover:text-gold-950 transition-colors"
+                  className="text-xs text-gray-600 hover:text-teal-950 transition-colors"
                 >
                   Reply
                 </button>
@@ -514,6 +522,9 @@ export default function WallPage() {
         followers: arrayUnion(user.uid)
       });
       setFollowing(prev => [...prev, authorId]);
+      
+      // Create follow notification
+      await createFollowNotification(authorId, user.uid);
     }
   };
 
@@ -544,9 +555,15 @@ export default function WallPage() {
     if (!user) return;
     const ref = doc(db, 'posts', post.id);
     const liked = post.likes?.includes(user.uid);
+    
     await updateDoc(ref, {
       likes: liked ? arrayRemove(user.uid) : arrayUnion(user.uid),
     });
+
+    // Create notification for like (only when liking, not unliking)
+    if (!liked && post.authorId && post.authorId !== user.uid) {
+      await createLikeNotification(post.authorId, user.uid, post.id);
+    }
   };
 
   const handleRepost = async (post) => {
@@ -592,7 +609,7 @@ export default function WallPage() {
               {/* Post creation form */}
               <form className="card p-4 sm:p-6 flex flex-col gap-4 animate-fade-in-up" onSubmit={handlePost}>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gold-950 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-teal-950 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
                     {user?.displayName?.[0] || user?.email?.[0] || 'U'}
                   </div>
                   <div className="flex-1">
@@ -699,7 +716,7 @@ export default function WallPage() {
                   <button
                     key={ft.value}
                     className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
-                      feedType === ft.value ? 'bg-gold-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      feedType === ft.value ? 'bg-teal-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                     onClick={() => setFeedType(ft.value)}
                   >
@@ -727,7 +744,7 @@ export default function WallPage() {
               <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                 <button
                   className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
-                    filterType === 'all' ? 'bg-gold-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    filterType === 'all' ? 'bg-teal-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                   onClick={() => setFilterType('all')}
                 >
@@ -740,7 +757,7 @@ export default function WallPage() {
                   <button
                     key={pt.value}
                     className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${
-                      filterType === pt.value ? 'bg-gold-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      filterType === pt.value ? 'bg-teal-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                     onClick={() => setFilterType(pt.value)}
                   >
@@ -761,14 +778,14 @@ export default function WallPage() {
                 ) : filteredPosts.map(post => (
                   <div key={post.id} className="card p-4 sm:p-6 animate-fade-in-up">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gold-950 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 text-sm sm:text-base">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-950 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 text-sm sm:text-base">
                         {post.author?.[0] || 'U'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <button
                             onClick={() => handleUserClick(post.authorId)}
-                            className="font-semibold text-gray-900 hover:text-gold-950 transition-colors text-sm sm:text-base"
+                            className="font-semibold text-gray-900 hover:text-teal-950 transition-colors text-sm sm:text-base"
                           >
                             {post.author}
                           </button>
@@ -820,9 +837,9 @@ export default function WallPage() {
                           )}
                           
                                                      {post.type === 'opportunity' && post.opportunityId && (
-                             <div className="mt-3 p-3 bg-gray-50 rounded-lg border-l-4 border-gold-950">
+                             <div className="mt-3 p-3 bg-gray-50 rounded-lg border-l-4 border-teal-950">
                                <div className="flex items-center gap-2 mb-2">
-                                 <span className="text-gold-950">💼</span>
+                                 <span className="text-teal-950">💼</span>
                                  <span className="font-semibold text-sm">Opportunity</span>
                                </div>
                                <div className="text-sm text-gray-700">
@@ -845,7 +862,7 @@ export default function WallPage() {
                           className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
                             following.includes(post.authorId)
                               ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                              : 'bg-gold-950 text-white hover:bg-gold-900'
+                              : 'bg-teal-950 text-white hover:bg-teal-900'
                           }`}
                         >
                           {following.includes(post.authorId) ? 'Following' : 'Follow'}
@@ -855,8 +872,8 @@ export default function WallPage() {
                     
                     <div className="flex gap-4 sm:gap-8 text-gray-600 text-sm border-t border-gray-200 pt-4">
                       <button
-                        className={`flex items-center gap-2 hover:text-gold-950 transition-colors ${
-                          post.likes?.includes(user?.uid) ? 'text-gold-950 font-semibold' : ''
+                        className={`flex items-center gap-2 hover:text-teal-950 transition-colors ${
+                          post.likes?.includes(user?.uid) ? 'text-teal-950 font-semibold' : ''
                         }`}
                         onClick={() => handleLike(post)}
                         disabled={!user}
@@ -867,7 +884,7 @@ export default function WallPage() {
                         <span>{post.likes?.length || 0}</span>
                       </button>
                       <button
-                        className="flex items-center gap-2 hover:text-gold-950 transition-colors"
+                        className="flex items-center gap-2 hover:text-teal-950 transition-colors"
                         onClick={() => setCommentPost(post)}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -876,8 +893,8 @@ export default function WallPage() {
                         <span>{post.comments?.length || 0}</span>
                       </button>
                       <button
-                        className={`flex items-center gap-2 hover:text-gold-950 transition-colors ${
-                          post.reposts?.includes(user?.uid) ? 'text-gold-950 font-semibold' : ''
+                        className={`flex items-center gap-2 hover:text-teal-950 transition-colors ${
+                          post.reposts?.includes(user?.uid) ? 'text-teal-950 font-semibold' : ''
                         }`}
                         onClick={() => handleRepost(post)}
                         disabled={!user}

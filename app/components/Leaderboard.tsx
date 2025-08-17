@@ -48,7 +48,7 @@ export default function Leaderboard() {
             <li key={u.id} className="flex items-center gap-3">
               <span className="font-semibold text-support/90">{u.displayName || u.email}</span>
               <span className="badge badge-info ml-2">{u.fcoin} F-Coins</span>
-              {i === 0 && <span className="ml-2 text-gold-950 font-bold">🏆</span>}
+              {i === 0 && <span className="ml-2 text-teal-500 font-bold">🏆</span>}
             </li>
           ))}
         </ol>
